@@ -3,13 +3,12 @@
 namespace App\Models;
 
 use PDO;
+use PDOException;
 
 /**
  * Post model
- *
- * PHP version 5.4
  */
-class Post extends \Core\Model
+class Post extends \Core\DB
 {
 
     /**

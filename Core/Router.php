@@ -1,7 +1,5 @@
 <?php
-
 namespace Core;
-
 /**
  * Router
  * @param $method
@@ -9,13 +7,39 @@ namespace Core;
  * @param array $dest
  * eg: $this->register('get', '/users/detail/{id}, ['UserController', 'detail'])
  * eg: $this->register('get', '/users/{name}/{id}, 'delete')
- */
+*/
 class Router
 {
-    private $routeTable = [];
-    private $currentRoute = null;
+    private static string $url = '';
+    public static $routeTable = [];
+    public static $currentRoute = null;
 
-    function register($method, $pattern, $dest = [])
+    //class contructor detect URL automally 
+    public function __construct()
+    {
+        static::$url = $_SERVER['REQUEST_URI'];
+
+    }
+
+    public static function post($pattern, $params = [])
+    {
+        static::register('post', $pattern, $params);
+    }
+    public static function get($pattern, $params = [])
+    {
+        static::register('get', $pattern, $params);
+    }
+
+    /**
+     * add a route to routeTable[]
+     * @param string $method
+     * @param string $pattern
+     * @param array $dest have controller, action, params, ...
+     * @param array $middleware
+     * @return void
+     *
+     */
+    public static function register($method,$pattern,$dest = [],$middleware = [])
     {
         /*
         $this->routeTable = [
@@ -24,95 +48,138 @@ class Router
             ]
         ]
         */
-        if(is_array($dest))
+        $method = strtolower($method);
+        if(!is_array($dest))
         {
             $dest = [$dest];
         }
-        $method = strtolower($method);
-        $this->routeTable[$method][$pattern] = [
+        if ($pattern == '') 
+        {
+            $pattern = '/home';
+        }
+        //trim( $string, $char): remove whitespace
+        $pattern = trim($pattern, '/');
+
+        static::$routeTable[$method][$pattern] = [
             'controller' => $dest[0],
-            'action' => $dest[1] ?? 'index'
+            'action' => $dest[1] ?? 'index',
+            'middleware' => $middleware
         ];
     }
-
     //match current url to route table and set current route
-    private function matching()
+    protected static function matching()
     {
-        //currentRoute = ['controller' => '', 'method' => '...', 'params'=> ['id' =>111]]
-        $url = parse_url($_SERVER['REQUEST_URI']);
+        $url = parse_url(static::$url)['path'];
+        $path = trim($url, '/');
+        if ($path == '') 
+        {
+            $path = 'home';
+        }
         $method = strtolower($_SERVER['REQUEST_METHOD']);
-        $path = $url['path'];
 
         $patternScore = [];
-        foreach ($this->routeTable[$method] as $pattern => $controller)
+        foreach (static::$routeTable[$method] as $pattern => $controller) 
         {
-            if($pattern === $path)
+            
+            if ($pattern == $path) 
             {
-                $this->currentRoute = $this->routeTable[$method][$pattern];
+                static::$currentRoute = static::$routeTable[$method][$pattern];
                 break;
             }
-            $patternScore[] = $this->patternScore($path, $pattern);
-        }
-
-        usort($patternScore, function ($a, $b)
+            $patternScore[] = static::patternScore($path, $pattern);
+        };
+        usort($patternScore, function($a, $b)
         {
-            if($a['score'] === $b['score'])
+            if ($a['score'] == $b['score']) 
             {
                 return count($a['params']) < count($b['params']);
             }
             return $a['score'] < $b['score'];
         });
 
-        $this->currentRoute = $this->routeTable[$method][$patternScore[0]['pattern']];
-        $this->currentRoute['params'] = $patternScore[0]['params'];
+        
+        if ($patternScore != null && static::$currentRoute == null) 
+        {
+            if ($patternScore[0]['score'] == 0 && !isset(static::$currentRoute['score'])) 
+            {
+                //not fouund
+                http_response_code(404);
+                exit();
+            }
+            static::$currentRoute = static::$routeTable[$method][$patternScore[0]['pattern']];
+            static::$currentRoute['params'] = $patternScore[0]['params'];
+        }
+
+        if (count(static::$currentRoute['middleware'])) 
+        {
+            foreach (static::$currentRoute['middleware'] as $middleware) 
+            {
+                $objectM = new $middleware;
+                $objectM->action(static::$currentRoute, $method, static::$currentRoute['params'] ?? '');
+                if ($objectM -> next == false) 
+                {
+                    echo 'Requse error!';
+                    // throw new \Exception($method);
+                    exit();
+                }
+            }
+        }
     }
-
-
-
-
-    private function patternScore($path, $patternStr)
+    /**
+     * pattern score
+     * @param string $path
+     * @param string $patternStr
+     * @return array
+     */
+    private static function patternScore(string $path, string $patternStr)
     {
-        $path = explode('/',$path);
-        $pattern = explode('/',$patternStr);
-
-        if(count($path) != count($pattern))
+        $path = explode('/', $path);
+        $pattern = explode('/', $patternStr);
+        // var_dump($path);
+        //var_dump($patternStr);
+        if (count($path) != count($pattern)) 
         {
             return ['score' => 0, 'params' => [], 'pattern' => $patternStr];
         }
 
         $score = 0;
         $param = [];
-        foreach($pattern as $i => $section)
+        foreach ($pattern as $i => $section) 
         {
-            if($path[$i] == $section)
+            if($path[$i] === $section)
             {
                 $score += 1;
-            } else
+            } else 
             {
-                $p = $this->convertParam($section);
+                $p = self::convertParams($section);
                 if($p)
                 {
                     $param[$p] = $path[$i];
                 }
             }
         }
-        return ['score' => $score, 'params'=>$param, 'pattern'=> $patternStr];
+        return ['score' => $score, 'params'=> $param, 'pattern'=> $patternStr];
     }
 
-    private function convertParam($section)
+    private static function convertParams($section)
     {
         $start = substr($section, 0, 1);
         $end = substr($section, -1, 1);
-        if($start == '{' && $end == '}')
+
+        if ($start == '{' && $end == '}') 
         {
-            return str_replace(['{', '}'], '', $section);
+            return str_replace(['{','}'], '', $section);
         }
         return '';
     }
-
-    function getRoute()
+    /**
+     * get route 
+     * @return array
+     *
+    **/
+    public static function getRoute()
     {
-        $this->matching();
-        return $this->currentRoute;
-    }
+        static::matching();
+        return static::$currentRoute;
+    } 
 }
