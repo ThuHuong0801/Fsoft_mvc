@@ -1,0 +1,1 @@
+{"logMessage":"Slow Log","logDatatime":"2021-12-29 11:08:39","data":{"sql":"SELECT * FROM users","time":5.1328125}}

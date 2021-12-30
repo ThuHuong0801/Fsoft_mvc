@@ -5,7 +5,5 @@ Router::register('get', '/users',  [App\Controllers\UserController::class, 'inde
 
 
 Router::register('get','/posts', [App\Controllers\PostsController::class]);
-
-Router::register('get','/students/list', [\app\controllers\StudentsController::class, 'index']);
-Router::register('get','/students/create', [App\Controllers\StudentsController::class, 'create']);
-Router::register('get','/students/edit/{id}', [App\Controllers\StudentsController::class, 'edit']);
+Router::register('get','/posts/create', [App\Controllers\PostsController::class, 'create']);
+Router::register('get','/posts/edit/{id}', [App\Controllers\PostsController::class, 'edit']);

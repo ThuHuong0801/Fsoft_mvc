@@ -4,7 +4,6 @@ use Core;
 require_once '../public/web.php';
 class Web
 {
-
     protected $route;
     protected $action;
     protected $params;

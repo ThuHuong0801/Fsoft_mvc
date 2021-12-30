@@ -3,6 +3,8 @@
 namespace Core;
 
 use Core\DB;
+use PDO;
+use PDOException;
 class Model extends DB
 {
     protected $connect;
@@ -17,7 +19,7 @@ class Model extends DB
 
     public function __construct()
     {   
-        $this->connect = $this->connect();
+        $this->connect = $this->getDB();
         $this->table = $this->getNameTable();
     }
 
@@ -70,22 +72,22 @@ class Model extends DB
         $this->_query($sql);
     }
     
-    public function getAll()
-    {
-        $sql = "SELECT * FROM $this->table";
-        $result = $this->_query($sql);
-        var_dump($result);
-        if (!$result){
-            die ('Lỗi không thể select');
+    public static function getAll()
+    {    
+        try {
+            $db = static::getDB();
+
+            $stmt = $db->query('SELECT id, title, content FROM posts 
+                                ORDER BY created_at');
+            $results = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+            return $results;
+            
+        } catch (PDOException $e) {
+            echo $e->getMessage();
         }
-        
-        $data = [];
-        while ($row = mysqli_fetch_assoc($result))
-        {
-            $data[] = $row;
-        }
-        return $data;
     }
+
 
     public function getById($table, $id)
     {
@@ -105,8 +107,37 @@ class Model extends DB
     private function _query($sql)
     {   
         $started = microtime(true) * 1000;
-        $result = mysqli_query($this->connect, $sql);     
+        //run query
+        $result = mysqli_query($this->connect, $sql);
+        
         $excuteTime = microtime(true) * 1000 - $started;
+        
+        if ($excuteTime > self::SLOW_LOG) {
+            $this->writeLog($sql, $excuteTime);
+        }
+
         return $result;
+    }
+
+    public function writeLog($sql, $time)
+    {
+        $log = [
+            'logMessage' => 'Slow Log',
+            'logDatatime' => date('Y-m-d H:i:s'),
+            'data' => ['sql' => $sql, 'time' => $time],
+        ];
+        
+        $this->log(json_encode($log));        
+    }
+
+    public function log($txt)
+    {
+        $fileLog = $txt;
+        file_put_contents(''.date("Ymd").'.txt', $fileLog);
+
+        $folderOld = "".dirname(__DIR__)."\\public\\".date("Ymd").".txt";
+        $folderNew = "".dirname(__DIR__)."\\logs\\mysql\\".date("Ymd").".txt";
+
+        rename($folderOld, $folderNew);
     }
 }

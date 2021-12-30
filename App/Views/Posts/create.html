@@ -1,0 +1,22 @@
+{% extends "base.html" %}
+
+{% block title %}Posts{% endblock %}
+
+{% block body %}
+    <h1>Posts</h1>
+    <form method="post" action="../Controllers/PostsController.php">
+        <table>
+            <tr>
+                <th>Title</th>
+                <td><input type="text"></td>
+            </tr>
+            <tr>
+                <th>Content</th>
+                <td><input type="text"></td>
+            </tr>
+            <tr>    
+                <td><button type="submit">Submit</button></td>
+            </tr>
+        </table>
+    </form>   
+{% endblock %}

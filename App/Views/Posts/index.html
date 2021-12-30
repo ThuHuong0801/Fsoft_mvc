@@ -3,14 +3,31 @@
 {% block title %}Posts{% endblock %}
 
 {% block body %}
-
     <h1>Posts</h1>
     <ul>
-        {% for post in posts %}
-        <h2>{{ post.title }}</h2>
-        <h2>{{ post.content }}</h2>
-        {% endfor %}
+        <a href="/posts/create">Add</a>
     </ul>
-
+    <ul>
+        <table class="table">
+            <thead>
+            <tr>
+                <th>Title</th>
+                <th>Content</th>
+                <th>Edit</th>
+                <th>Delete</th>
+            </tr>
+            </thead>
+            <tbody>
+                {% for post in posts %}
+                <tr>
+                    <td>{{ post.title }}</td>
+                    <td>{{ post.content }}</td>
+                    <td><a href="/">Sửa</a></td>
+                    <td><a href="/">Xóa</a></td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </ul>   
 {% endblock %}
 
