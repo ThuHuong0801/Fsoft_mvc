@@ -1,41 +1,81 @@
 <?php
-namespace App\Controllers;
+namespace app\Controllers;
 use \Core\View;
-use \Core\Model;
-use App\Models\Post;
+use app\Repositories\PostsRepository;
+use app\Controllers\BaseController;
 
-class PostsController extends BaseController
+class PostsController extends BaseController 
 {
-    
-    public function __construct() 
+
+    protected $postRepo;
+
+    public function __construct()
     {
-        $this->posts = new Post();
+        $this->postRepo = new PostsRepository();
     }
 
     public function index()
     {
-        $posts = Model::getAll();
+        $posts = $this->postRepo->getAll();
         View::renderTemplate('Posts/index.html', [
             'posts' => $posts
         ]);
-
     }
+    
+    public function viewcreate()
+    {
+        View::renderTemplate('Posts/create.html');
+    }
+
     public function create()
     {
-        $posts = Model::getAll();
-        View::renderTemplate('posts/create.html', [
+        if(isset($_POST['submit']))
+        {
+            $data = [
+            'title' => $_POST['title'],
+            'content' => $_POST['content']
+            ];
+        }
+        var_dump($data);
+        $this->postRepo->insertdata($data);
+        echo "<br/>";
+        echo "<a href='/posts'>Back for home page</a>";
+    }
+
+    public function find($id)
+    {
+        $posts = $this->postRepo->find($id);
+        View::renderTemplate('Posts/index.html', [
             'posts' => $posts
         ]);
     }
-    
-    public function update()
+
+    public function edit($id)
     {
-        
+        $posts = $this->postRepo->find($id);
+        View::renderTemplate('Posts/edit.html', [
+            'posts' => $posts
+        ]);
     }
-    
-    public function delete()
+    public function update($id)
     {
-        
+        if(isset($_POST['submit']))
+        {
+            $data = [
+            'title' => $_POST['title'],
+            'content' => $_POST['content']
+            ];
+        }
+        $this->postRepo->updatedata($data, $id);
+        echo "<br/>";
+        echo "<a href='/posts'>Back for home page</a>";
+    }
+
+    public function delete($id)
+    {
+        $this->postRepo->delete($id);
+        echo "Bạn đã xóa thành công rồi nè!";
+        echo "<br/>";
+        echo "<a href='/posts'>Back for home page</a>";
     }
 }
-?>

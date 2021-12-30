@@ -3,19 +3,19 @@
 {% block title %}Posts{% endblock %}
 
 {% block body %}
-    <h1>Posts</h1>
-    <form method="post" action="../Controllers/PostsController.php">
+    <h1>Create Posts</h1>
+    <form method="POST" action="/posts/create">
         <table>
             <tr>
                 <th>Title</th>
-                <td><input type="text"></td>
+                <td><input type="text" name="title" class="form-control" id="title" placeholder="enter title..."></td>
             </tr>
             <tr>
                 <th>Content</th>
-                <td><input type="text"></td>
+                <td><input type="text" name="content" class="form-control" id="content" placeholder="enter content..."></td>
             </tr>
             <tr>    
-                <td><button type="submit">Submit</button></td>
+                <td><button type="submit" name="submit">Submit</button></td>
             </tr>
         </table>
     </form>   

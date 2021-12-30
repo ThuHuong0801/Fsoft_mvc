@@ -1,0 +1,25 @@
+{% extends "base.html" %}
+
+{% block title %}Posts{% endblock %}
+
+{% block body %}
+    <h1>Edit Posts</h1>
+    {% for post in posts %}
+    <form method="POST" action="/posts/update/{{ post.id }}">
+        <table>
+            
+            <tr>
+                <th>Title</th>
+                <td><input type="text" name="title" id="title" placeholder="enter title..." value="{{ post.title }}"></td>
+            </tr>
+            <tr>
+                <th>Content</th>
+                <td><input type="text" name="content" id="content" placeholder="enter content..." value="{{ post.content }}"></td>
+            </tr>
+            <tr>    
+                <td><button type="submit" name="submit">Submit</button></td>
+            </tr>
+            {% endfor %}
+        </table>
+    </form>   
+{% endblock %}

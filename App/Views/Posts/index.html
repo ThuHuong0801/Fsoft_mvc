@@ -5,7 +5,7 @@
 {% block body %}
     <h1>Posts</h1>
     <ul>
-        <a href="/posts/create">Add</a>
+        <a href="/posts/viewcreate">Add</a>
     </ul>
     <ul>
         <table class="table">
@@ -22,8 +22,8 @@
                 <tr>
                     <td>{{ post.title }}</td>
                     <td>{{ post.content }}</td>
-                    <td><a href="/">Sửa</a></td>
-                    <td><a href="/">Xóa</a></td>
+                    <td><a href="/posts/edit/{{ post.id }}">edit</a></td>
+                    <td><a href="/posts/delete/{{ post.id }}" onclick="return confirm('Are you sure you want to delete this post?');">delete</a></td>
                 </tr>
                 {% endfor %}
             </tbody>
